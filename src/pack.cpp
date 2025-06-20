@@ -13,7 +13,7 @@
 #include "tchar.h"
 
 #ifdef DBG_SOLUTION
-#include"fake.h"
+#include"fake.hpp"
 #else
 #include "../../../Source/build.h"
 #endif

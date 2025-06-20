@@ -4,7 +4,6 @@
 extern "C" {
 #endif
 
-class CEXEBuild {};
 int Main2CustomNoExcept(int numArgs, char* args[]);
 int Extract7z(LPTSTR archive, LPTSTR dir, HWND, int progress_type);
 
