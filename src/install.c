@@ -2,8 +2,12 @@
 #include "log.h"
 #include <wchar.h>
 #include <stdio.h>
-#include "../../Contrib/7-Zip/Contrib/nsis7z/CPP/7zip/UI/Console/Console7zMain.h"
-#include "../../Contrib/7-Zip/Contrib/nsis7z/CPP/7zip/UI/NSIS/Extract7z.h"
+#ifdef DBG_SOLUTION
+#include"fake.h"
+#else
+#include "../../../Contrib/7-Zip/Contrib/nsis7z/CPP/7zip/UI/Console/Console7zMain.h"
+#include "../../../Contrib/7-Zip/Contrib/nsis7z/CPP/7zip/UI/NSIS/Extract7z.h"
+#endif
 
 // 递归创建目录
 static int CreateDirRecursiveW(const wchar_t* path) {

@@ -15,7 +15,7 @@
 #ifdef DBG_SOLUTION
 #include"fake.h"
 #else
-#include "../build.h"
+#include "../../../Source/build.h"
 #endif
 
 // 递归遍历目录下所有文件，回调绝对路径和相对路径
@@ -273,8 +273,12 @@ uint64_t PackInstall::AddSrcFile(const std::wstring& path, const std::wstring& o
 bool PackInstall::ParseConfigIni() {
   compress_param_ = L"-t7z -m0=lzma:fb=273 -mx=9 -md=256M -ms=4G -mmt=2";
   pre_extract_plugins_.clear();
-
-  HANDLE hFile = CreateFileW(L".\\config.ini", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  #ifdef DBG_SOLUTION
+  std::wstring config_path = L"config.ini";
+#else
+  std::wstring config_path = GetCurrentModuleDir() + L"config.ini";
+#endif
+  HANDLE hFile = CreateFileW(config_path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (hFile == INVALID_HANDLE_VALUE) {
     XNSIS_LOG(L"config.ini not found, using default compress_param");
     return true;
@@ -529,7 +533,7 @@ bool PackInstall::GenerateInstall7z(CEXEBuild* build, int& build_compress) {
 #ifdef DBG_SOLUTION
   std::wstring distinfo_path = g_dist_info_name;
 #else
-  std::wstring distinfo_path = temp_dir_ + L"\\" + distinfo_path;
+  std::wstring distinfo_path = temp_dir_ + L"\\" + g_dist_info_name;
 #endif
 
   // 将install.7z文件名设置到distinfo中
