@@ -2,6 +2,8 @@
 #include "log.h"
 #include <wchar.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #ifdef DBG_SOLUTION
 #include"fake.h"
 #else
@@ -156,6 +158,14 @@ int ExtractInstall7z(InstallContext* ctx, const wchar_t* install7z_path) {
   // 创建临时目录
   GetTempPathW(MAX_PATH, ctx->temp_dir);
   wcscat_s(ctx->temp_dir, MAX_PATH, L"install_tmp");
+  
+  // 添加随机数到临时目录名，避免冲突
+  srand((unsigned int)time(NULL));
+  int random_num = rand() % 1000; // 生成0-999的随机数
+  wchar_t random_suffix[16];
+  wsprintfW(random_suffix, L"%d", random_num);
+  wcscat_s(ctx->temp_dir, MAX_PATH, random_suffix);
+  
   if (!CreateDirectoryW(ctx->temp_dir, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
     XNSIS_LOG(L"CreateDirectoryW for temp_dir failed: %s, error=%lu", ctx->temp_dir, GetLastError());
     return 0;
