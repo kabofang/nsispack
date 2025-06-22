@@ -117,17 +117,41 @@ int SetCurrentRealOutDir(InstallContext* ctx, const wchar_t* real_dir) {
   ctx->real_dirs[ctx->real_dir_count] = (wchar_t*)malloc((len + 1) * sizeof(wchar_t));
   if (!ctx->real_dirs[ctx->real_dir_count]) return 0;
   wcsncpy_s(ctx->real_dirs[ctx->real_dir_count], len + 1, real_dir, len);
+
+  // 分发对应fake目录下的文件到该real_dir
+  DWORD idx = ctx->real_dir_count;
+  if (idx < ctx->distinfo.dir_count) {
+    InstallFakeDir* fdir = &ctx->distinfo.dirs[idx];
+    for (DWORD j = 0; j < fdir->file_count; ++j) {
+      wchar_t src[MAX_PATH], dst[MAX_PATH];
+      wsprintfW(src, L"%s\\%s", ctx->temp_dir, fdir->file_list[j]);
+      wsprintfW(dst, L"%s\\%s", real_dir, fdir->file_list[j]);
+      wchar_t* last = wcsrchr(dst, L'\\');
+      if (last) {
+        *last = 0;
+        if (!CreateDirRecursiveW(dst)) {
+          XNSIS_LOG(L"Failed to create dir: %s", dst);
+          return 0;
+        }
+        *last = L'\\';
+      }
+      if (!CopyFileW(src, dst, FALSE)) {
+        XNSIS_LOG(L"Failed to copy file: %s -> %s, error=%lu", src, dst, GetLastError());
+        return 0;
+      }
+    }
+  }
   ctx->real_dir_count++;
   return 1;
 }
+
 // 解压install.7z到临时目录并分发所有文件（在多次SetCurrentRealOutDir之后调用）
-int ExtractInstall7z(InstallContext* ctx) {
+int ExtractInstall7z(InstallContext* ctx, const wchar_t* install7z_path) {
   if (!ctx) {
     XNSIS_LOG(L"Invalid parameters");
     return 0;
   }
-
-  wcsncpy_s(ctx->install7z_path, MAX_PATH, ctx->distinfo.install7z_name, _TRUNCATE);
+  wcsncpy_s(ctx->install7z_path, MAX_PATH, install7z_path, _TRUNCATE);
 
   // 创建临时目录
   GetTempPathW(MAX_PATH, ctx->temp_dir);
@@ -175,30 +199,6 @@ int ExtractInstall7z(InstallContext* ctx) {
     XNSIS_LOG(L"Successfully recompressed plugin: %s", plugin->path);
   }
   
-  // 分发所有fake目录下的文件到对应的真实目录
-  for (DWORD i = 0; i < min(ctx->real_dir_count, ctx->distinfo.dir_count); ++i) {
-    InstallFakeDir* fdir = &ctx->distinfo.dirs[i];
-    wchar_t* real_dir = ctx->real_dirs[i];
-    
-    for (DWORD j = 0; j < fdir->file_count; ++j) {
-      wchar_t src[MAX_PATH], dst[MAX_PATH];
-      wsprintfW(src, L"%s\\%s", ctx->temp_dir, fdir->file_list[j]);
-      wsprintfW(dst, L"%s\\%s", real_dir, fdir->file_list[j]);
-      wchar_t* last = wcsrchr(dst, L'\\');
-      if (last) {
-        *last = 0;
-        if (!CreateDirRecursiveW(dst)) {
-          XNSIS_LOG(L"Failed to create dir: %s", dst);
-          return 0;
-        }
-        *last = L'\\';
-      }
-      if (!CopyFileW(src, dst, FALSE)) {
-        XNSIS_LOG(L"Failed to copy file: %s -> %s, error=%lu", src, dst, GetLastError());
-        return 0;
-      }
-    }
-  }
   DeleteFileW(ctx->install7z_path);
   return 1;
 }

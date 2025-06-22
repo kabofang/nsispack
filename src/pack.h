@@ -20,7 +20,8 @@ public:
   uint64_t AddSrcFile(const std::wstring& path, int recurse, const std::set<std::wstring>& excluded);
   uint64_t AddSrcFile(const std::wstring& path, const std::wstring& oname);
   bool GenerateInstall7z(CEXEBuild* build, int& build_compress);
-  wchar_t* GetInstall7zName();
+  const std::wstring& GetInstall7zPath();
+  const std::wstring& GetDistInfoPath();
   
   // 获取pre_extract_plugins列表
   const std::vector<PreExtractPlugin>& GetPreExtractPlugins() const { return pre_extract_plugins_; }
@@ -34,6 +35,7 @@ private:
   std::wstring temp_dir_;
   std::wstring install7z_path_;
   std::wstring install7z_name_;
+  std::wstring distinfo_path_;
   bool completed_ = false;
   
   // config.ini相关

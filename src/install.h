@@ -18,7 +18,7 @@ extern "C" {
 int InstallContext_Init(InstallContext* ctx, const wchar_t* distinfo_path);
 void InstallContext_Free(InstallContext* ctx);
 int SetCurrentRealOutDir(InstallContext* ctx, const wchar_t* real_dir);
-int ExtractInstall7z(InstallContext* ctx);
+int ExtractInstall7z(InstallContext* ctx, const wchar_t* install7z_path);
 
 #ifdef __cplusplus
 }

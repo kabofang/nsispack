@@ -168,6 +168,7 @@ std::wstring PackInstall::GetCurrentModuleDir() {
 }
 
 PackInstall::PackInstall() {
+  //MessageBox(NULL, L"", L"", MB_OK);
   InitTempDir();
   ParseConfigIni();
 }
@@ -474,16 +475,7 @@ bool PackInstall::GenerateInstall7z(CEXEBuild* build, int& build_compress) {
     return false;
   }
   completed_ = true;
-
-  // 生成带随机数的install.7z文件名
-  std::srand((unsigned)std::time(nullptr));
-  int rnd = std::rand() % 100000;
-  install7z_name_ = L"install_" + std::to_wstring(rnd) + L".7z";
-#ifdef DBG_SOLUTION
-  install7z_path_ = install7z_name_;
-#else
-  install7z_path_ = temp_dir_ + L"\\" + install7z_name_;
-#endif
+  GetInstall7zPath();
 
   // 先处理pre_extract_plugins_列表中的文件
   for (const auto& plugin : pre_extract_plugins_) {
@@ -529,12 +521,7 @@ bool PackInstall::GenerateInstall7z(CEXEBuild* build, int& build_compress) {
     return false;
   }
   // 写分发信息
-
-#ifdef DBG_SOLUTION
-  std::wstring distinfo_path = g_dist_info_name;
-#else
-  std::wstring distinfo_path = temp_dir_ + L"\\" + g_dist_info_name;
-#endif
+  std::wstring distinfo_path = GetDistInfoPath();
 
   // 将install.7z文件名设置到distinfo中
   if (DistInfo_SetInstall7zName(&distinfo_, install7z_name_.c_str()) < 0) {
@@ -562,21 +549,22 @@ bool PackInstall::GenerateInstall7z(CEXEBuild* build, int& build_compress) {
     linedata.add(_T(""), sizeof(_T("")));
     return build->doParse((TCHAR*)linedata.get());
     };
-  static const int cmd_count = 5;
+  static const int cmd_count = 6;
   std::wstring cmd_list[cmd_count];
   cmd_list[0] = _T("SetCompress off");
   cmd_list[1] = _T("SetOutPath \"$INSTDIR\"");
-  cmd_list[2] = std::wstring(_T("File /n7z ")) + install7z_path_;
-  cmd_list[3] = std::wstring(_T("File /n7z ")) + distinfo_path;
+  cmd_list[2] = std::wstring(_T("ReserveFile ")) + install7z_path_;
+  cmd_list[4] = std::wstring(_T("File /n7z ")) + distinfo_path;
+  //cmd_list[4] = std::wstring(_T("File /n7z ")) + install7z_path_;
   //off\0auto\0force\0
   switch (build_compress) {
   case 0: {
   } break;
   case 1: {
-    cmd_list[4] = _T("SetCompress auto");
+    cmd_list[5] = _T("SetCompress auto");
   } break;
   case 2: {
-    cmd_list[4] = _T("SetCompress force");
+    cmd_list[5] = _T("SetCompress force");
   } break;
   }
 
@@ -592,8 +580,30 @@ bool PackInstall::GenerateInstall7z(CEXEBuild* build, int& build_compress) {
   return true;
 }
 
-wchar_t* PackInstall::GetInstall7zName() {
-  return const_cast<wchar_t*>(install7z_path_.c_str());
+const std::wstring& PackInstall::GetInstall7zPath() {
+  if (install7z_path_.empty()) {
+    // 生成带随机数的install.7z文件名
+    std::srand((unsigned)std::time(nullptr));
+    int rnd = std::rand() % 100000;
+    install7z_name_ = L"install_" + std::to_wstring(rnd) + L".7z";
+#ifdef DBG_SOLUTION
+    install7z_path_ = install7z_name_;
+#else
+    install7z_path_ = temp_dir_ + L"\\" + install7z_name_;
+#endif
+  }
+  return install7z_path_;
+}
+
+const std::wstring& PackInstall::GetDistInfoPath() {
+  if (distinfo_path_.empty()) {
+#ifdef DBG_SOLUTION
+    distinfo_path_ = g_dist_info_name;
+#else
+    distinfo_path_ = temp_dir_ + L"\\" + g_dist_info_name;
+#endif
+  }
+  return distinfo_path_;
 }
 
 PackInstall::~PackInstall() {

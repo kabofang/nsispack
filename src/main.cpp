@@ -20,9 +20,9 @@ int main() {
 
   InstallContext context = InstallContext{};
 
+  CHECK_ADDSRC_ERROR(InstallContext_Init(&context, g_dist_info_name));
+  CHECK_ADDSRC_ERROR(ExtractInstall7z(&context, instance.GetInstall7zPath().c_str()));
   CHECK_ADDSRC_ERROR(SetCurrentRealOutDir(&context, L"test\\out\\$11"));
   CHECK_ADDSRC_ERROR(SetCurrentRealOutDir(&context, L"test\\out\\$12"));
-  CHECK_ADDSRC_ERROR(InstallContext_Init(&context, g_dist_info_name));
-  CHECK_ADDSRC_ERROR(ExtractInstall7z(&context));
   InstallContext_Free(&context);
 }
