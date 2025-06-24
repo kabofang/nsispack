@@ -30,7 +30,7 @@ public:
   std::wstring GetConfig7zParam() const { return compress_param_; }
 
 private:
-  InstallDistInfo distinfo_;
+  InstallDistInfo distinfo_{};
   int current_fake_idx_ = -1;
   std::wstring temp_dir_;
   std::wstring install7z_path_;
