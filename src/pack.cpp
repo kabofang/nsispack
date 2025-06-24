@@ -168,7 +168,7 @@ std::wstring PackInstall::GetCurrentModuleDir() {
 }
 
 PackInstall::PackInstall() {
-  //MessageBox(NULL, L"", L"", MB_OK);
+  // MessageBox(NULL, L"", L"", MB_OK);
   InitTempDir();
   ParseConfigIni();
 }
@@ -238,6 +238,7 @@ uint64_t PackInstall::AddSrcFile(const std::wstring& path, int recurse, const st
       }
     }
     });
+  need_pack_ |= (!!total_size);
   return static_cast<int>(total_size);
 }
 
@@ -268,7 +269,9 @@ uint64_t PackInstall::AddSrcFile(const std::wstring& path, const std::wstring& o
   else {
     XNSIS_LOG(L"GetFileAttributesExW failed: %s, error=%lu", dst.c_str(), GetLastError());
   }
-  return sz ? sz : 1;
+  sz = sz ? sz : 1;
+  need_pack_ |= (!!sz);
+  return sz;
 }
 
 bool PackInstall::ParseConfigIni() {
@@ -549,12 +552,13 @@ bool PackInstall::GenerateInstall7z(CEXEBuild* build, int& build_compress) {
     linedata.add(_T(""), sizeof(_T("")));
     return build->doParse((TCHAR*)linedata.get());
     };
-  static const int cmd_count = 6;
+  static const int cmd_count = 10;
   std::wstring cmd_list[cmd_count];
-  cmd_list[0] = _T("SetCompress off");
-  cmd_list[1] = _T("SetOutPath \"$INSTDIR\"");
-  cmd_list[2] = std::wstring(_T("ReserveFile ")) + install7z_path_;
-  cmd_list[4] = std::wstring(_T("File /n7z ")) + distinfo_path;
+  cmd_list[0] = _T("Section \"xnsis_sec\"");
+  cmd_list[1] = _T("SetCompress off");
+  cmd_list[2] = _T("SetOutPath \"$INSTDIR\"");
+  cmd_list[3] = std::wstring(_T("ReserveFile ")) + install7z_path_;
+  cmd_list[4] = std::wstring(_T("ReserveFile ")) + distinfo_path;
   //cmd_list[4] = std::wstring(_T("File /n7z ")) + install7z_path_;
   //off\0auto\0force\0
   switch (build_compress) {
@@ -567,7 +571,7 @@ bool PackInstall::GenerateInstall7z(CEXEBuild* build, int& build_compress) {
     cmd_list[5] = _T("SetCompress force");
   } break;
   }
-
+  cmd_list[9] = _T("SectionEnd");
   for (int i = 0; i < cmd_count; ++i) {
     if (cmd_list[i].empty()) {
       continue;

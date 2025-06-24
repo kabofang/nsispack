@@ -37,6 +37,7 @@ private:
   std::wstring install7z_name_;
   std::wstring distinfo_path_;
   bool completed_ = false;
+  bool need_pack_ = false;
   
   // config.ini相关
   std::wstring compress_param_;  // install7z压缩参数
